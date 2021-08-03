@@ -8,9 +8,11 @@ import com.linyuanbaobao.payload.support.utils.DingDingUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -31,6 +33,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -46,6 +49,9 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
 
     @Value("${spring.application.name:}")
     private String applicationName;
+
+    @Autowired
+    private ErrorMessage errorMessage;
 
     private ObjectMapper objectMapper;
 
@@ -74,23 +80,23 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
             return attributes;
         }
 
-        int status = Integer.parseInt(attributes.get("status").toString());
         Throwable error = getError(webRequest);
-        long timestamp = System.currentTimeMillis();
+        int status = Integer.parseInt(attributes.get("status").toString());
         int code = getCode(status, error);
+        long timestamp = System.currentTimeMillis();
 
         Map<String, Object> resultAttributes = new LinkedHashMap<>();
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_SUCCESS), false);
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_PATH), attributes.get("path"));
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_TIMESTAMP), timestamp);
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_CODE), code);
-        resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_MESSAGE), getMessage(attributes.get("error").toString(), error));
+        resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_MESSAGE), errorMessage.getErrorMessage(attributes, error));
         if (payloadProperties.isEnableTrace()) {
             resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_STACK), attributes.get("trace"));
         }
 
         if (payloadProperties.getDingDingRobotConfig().isEnable()
-                && code >= HttpStatus.INTERNAL_SERVER_ERROR.value()
+                && status >= HttpStatus.INTERNAL_SERVER_ERROR.value()
                 && error != null
                 && getBizErrorAnnotation(error) == null) {
             StackTraceElement stackTraceElement = error.getStackTrace()[0];
@@ -108,26 +114,12 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     }
 
     private Integer getCode(int status, Throwable error) {
-        if (status >= HttpStatus.BAD_REQUEST.value() && status < HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-            BizErrorResponseStatus annotation = getBizErrorAnnotation(error);
-            return (annotation != null) ? annotation.value() : status;
-        }
-        return status;
+        BizErrorResponseStatus annotation = getBizErrorAnnotation(error);
+        return (Objects.nonNull(annotation)) ? annotation.value() : status;
     }
 
     private BizErrorResponseStatus getBizErrorAnnotation(Throwable error) {
         return (error != null) ? AnnotationUtils.findAnnotation(error.getClass(), BizErrorResponseStatus.class) : null;
-    }
-
-    private String getMessage(String errorMsg, Throwable error) {
-        if (error instanceof MethodArgumentNotValidException) {
-            return getMessage(((MethodArgumentNotValidException) error).getBindingResult().getAllErrors());
-        } else if (error instanceof BindException) {
-            return getMessage(((BindException) error).getAllErrors());
-        } else if (error instanceof ConversionFailedException) {
-            return error.getCause().getMessage();
-        }
-        return errorMsg;
     }
 
     private String getMessage(List<ObjectError> error) {
@@ -162,5 +154,27 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
         }
     }
 
+    public interface ErrorMessage {
+        String getErrorMessage(Map<String, Object> resultAttributes, Throwable error);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
+    public ErrorMessage errorMessage() {
+        return new ErrorMessage() {
+            @Override
+            public String getErrorMessage(Map<String, Object> resultAttributes, Throwable error) {
+                String errorMsg = resultAttributes.get("error").toString();
+                if (error instanceof MethodArgumentNotValidException) {
+                    return getMessage(((MethodArgumentNotValidException) error).getBindingResult().getAllErrors());
+                } else if (error instanceof BindException) {
+                    return getMessage(((BindException) error).getAllErrors());
+                } else if (error instanceof ConversionFailedException) {
+                    return error.getCause().getMessage();
+                }
+                return StringUtils.isEmpty(error.getMessage()) ? errorMsg : error.getMessage();
+            }
+        };
+    }
 
 }

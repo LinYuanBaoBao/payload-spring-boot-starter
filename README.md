@@ -15,7 +15,7 @@ by：林同学（765371578@qq.com）
 <dependency>
     <groupId>com.github.LinYuanBaoBao</groupId>
     <artifactId>payload-spring-boot-starter</artifactId>
-    <version>1.0.0-RELEASE</version>
+    <version>1.0.1-RELEASE</version>
 </dependency>
 ```
 
@@ -29,7 +29,7 @@ public class MyController {
 
     @GetMapping("/{id}")
     public User get(@PathVariable Integer id) {
-      return user;
+        return user;
     }
 
 }
@@ -40,15 +40,15 @@ public class MyController {
 {
   "code": 200,
   "data": {
-     "k1": "v1",
-     "k2": "v2"
+    "k1": "v1",
+    "k2": "v2"
   },
   "success": true,
   "message": "success",
   "timestamp": 1623055152059
 }
 ```
-     
+
 ### 配置
 见配置文件中 **spring.mvc.payload** 属性的自动提示
 ```yaml
@@ -56,8 +56,8 @@ spring:
   mvc:
     payload:
       code: 200              # 成功状态码，默认：200
-      errorEnabled: false    # 统一错误处理
-      enableTrace: false     # 打印堆栈信息
+      error-enabled: false    # 统一错误处理
+      enable-trace: false     # 打印堆栈信息
       payload-map:
         code: code
         success: success
@@ -72,12 +72,12 @@ spring:
         secret: SEC...
 ```
 
-### 业务异常  @BizErrorResponseStatus
+### 异常处理
 
-继承 RuntimeException 类，并加上 **@BizErrorResponseStatus(400)** 注解，值为自定义的错误码，异常消息参数 `message` 也会一同响应返回。
+对于业务异常，建议继承 RuntimeException 类，并加上 **@BizErrorResponseStatus** 注解。 该注解还支持配置 `status` 属性定义 http-status 状态码，与 `code` 属性定义响应的 code 错误码。
 
 ```java
-@BizErrorResponseStatus(400)
+@BizErrorResponseStatus(code = 400,status = HttpStatus.BAD_REQUEST)
 public class CustomerException extends RuntimeException {
    public CustomerException(String message){
         super(message);
@@ -85,7 +85,7 @@ public class CustomerException extends RuntimeException {
 }
 ```
 
-响应结果格式如下：
+当抛出上面异常时，HTTP 响应报文 http-status 状态码为 400，内容如下：
 ```json
 {
     "success": false,
@@ -96,8 +96,30 @@ public class CustomerException extends RuntimeException {
 }
 ```
 
-### 代码异常告警（钉钉机器人）  
-若启用了钉钉机器人告警，当异常（未使用 @BizErrorResponseStatus 注解）产生到响应状态码（code） >= 500 时，会触发告警，内容如下：
+抛出异常时，默认 `message` 信息为异常描述信息，你也可以自定义异常信息的获取方式，如：
+
+```java
+@Bean
+public ErrorMessage errorMessage() {
+    return new ErrorMessage() {
+        @Override
+        public String getErrorMessage(Map<String, Object> resultAttributes, Throwable error) {
+            String errorMsg = resultAttributes.get("error").toString();
+            if (error instanceof MethodArgumentNotValidException) {
+                return getMessage(((MethodArgumentNotValidException) error).getBindingResult().getAllErrors());
+            } else if (error instanceof BindException) {
+                return getMessage(((BindException) error).getAllErrors());
+            } else if (error instanceof ConversionFailedException) {
+                return error.getCause().getMessage();
+            }
+            return StringUtils.isEmpty(error.getMessage()) ? errorMsg : error.getMessage();
+        }
+    };
+}
+```
+
+### 代码异常告警（钉钉机器人）
+若启用了钉钉机器人告警，当异常（未使用 @BizErrorResponseStatus 注解）产生的响应 http-status 状态码 >= 500 时，会触发告警，内容如下：
 ```
 服务名称：${spring.application.name}
 报错日期：2021-06-09 18:16:07

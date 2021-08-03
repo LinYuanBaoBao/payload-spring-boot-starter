@@ -1,5 +1,7 @@
 package com.linyuanbaobao.payload.config;
 
+import com.linyuanbaobao.payload.config.PayloadProperties;
+import com.linyuanbaobao.payload.config.RequestResponseBodyMethodProcessorProxy;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -36,7 +38,6 @@ public class PayloadAutoConfiguration implements InitializingBean {
             int index = handlers.indexOf(item);
             if (RequestResponseBodyMethodProcessor.class.isAssignableFrom(item.getClass())) {
                 handlers.add(index, new RequestResponseBodyMethodProcessorProxy((RequestResponseBodyMethodProcessor) item, payloadProperties, payloadMap));
-                handlers.remove(item);
                 break;
             }
         }

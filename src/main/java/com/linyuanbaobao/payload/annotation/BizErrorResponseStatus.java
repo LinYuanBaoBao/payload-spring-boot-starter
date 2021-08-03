@@ -1,5 +1,7 @@
 package com.linyuanbaobao.payload.annotation;
 
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -16,8 +18,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+@ResponseStatus
 public @interface BizErrorResponseStatus {
+
+    @AliasFor("code")
     int value() default 400;
+
+    @AliasFor("value")
+    int code() default 400;
+
+    @AliasFor(annotation = ResponseStatus.class, attribute = "code")
+    HttpStatus status() default HttpStatus.BAD_REQUEST;
 }
 
