@@ -97,11 +97,17 @@ public class CustomerException extends RuntimeException {
 ```
 
 抛出异常时，默认 `message` 信息为异常描述信息，你也可以自定义异常信息的获取方式，如：
-
+- isDealAttributes：是否对响应进行处理（默认为 true)
+- getErrorMessage：获取错误消息
 ```java
 @Bean
-public ErrorMessage errorMessage() {
-    return new ErrorMessage() {
+public ErrorDeal errorDeal() {
+    return new ErrorDeal() {
+        @Override
+        public Boolean isDealAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
+            return true;
+        }
+
         @Override
         public String getErrorMessage(Map<String, Object> resultAttributes, Throwable error) {
             String errorMsg = resultAttributes.get("error").toString();

@@ -14,3 +14,7 @@
 - 支持自定义异常响应点 http-status 状态码
 
 - 修复与其它 HandlerMethodReturnValueHandler 冲突问题
+
+### 1.0.2-RELEASE
+
+- 修复全局异常类仅能处理 `Accept = application/json` 问题

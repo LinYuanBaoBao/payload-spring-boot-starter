@@ -51,7 +51,7 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     private String applicationName;
 
     @Autowired
-    private ErrorMessage errorMessage;
+    private ErrorDeal errorDeal;
 
     private ObjectMapper objectMapper;
 
@@ -76,7 +76,8 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
         options = options.including(ErrorAttributeOptions.Include.STACK_TRACE);
         Map<String, Object> attributes = super.getErrorAttributes(webRequest, options);
-        if (webRequest.getHeader("Accept").matches(".*text/html.*")) {
+
+        if (!errorDeal.isDealAttributes(webRequest, options)) {
             return attributes;
         }
 
@@ -90,7 +91,7 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_PATH), attributes.get("path"));
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_TIMESTAMP), timestamp);
         resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_CODE), code);
-        resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_MESSAGE), errorMessage.getErrorMessage(attributes, error));
+        resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_MESSAGE), errorDeal.getErrorMessage(attributes, error));
         if (payloadProperties.isEnableTrace()) {
             resultAttributes.put(payloadMap.get(PayloadProperties.ATTRIBUTE_STACK), attributes.get("trace"));
         }
@@ -154,14 +155,21 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
         }
     }
 
-    public interface ErrorMessage {
+    public interface ErrorDeal {
         String getErrorMessage(Map<String, Object> resultAttributes, Throwable error);
+
+        Boolean isDealAttributes(WebRequest webRequest, ErrorAttributeOptions options);
     }
 
     @ConditionalOnMissingBean
     @Bean
-    public ErrorMessage errorMessage() {
-        return new ErrorMessage() {
+    public ErrorDeal errorDeal() {
+        return new ErrorDeal() {
+            @Override
+            public Boolean isDealAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
+                return true;
+            }
+
             @Override
             public String getErrorMessage(Map<String, Object> resultAttributes, Throwable error) {
                 String errorMsg = resultAttributes.get("error").toString();
