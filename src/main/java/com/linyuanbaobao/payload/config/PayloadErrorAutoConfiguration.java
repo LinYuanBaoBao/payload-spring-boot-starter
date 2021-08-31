@@ -156,8 +156,20 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     }
 
     public interface ErrorDeal {
+        /**
+         * 获取错误消息
+         * @param resultAttributes 结果map
+         * @param error 错误
+         * @return 错误消息
+         */
         String getErrorMessage(Map<String, Object> resultAttributes, Throwable error);
 
+        /**
+         * 是否处理
+         * @param webRequest webRequest
+         * @param options 选项
+         * @return 是否处理
+         */
         Boolean isDealAttributes(WebRequest webRequest, ErrorAttributeOptions options);
     }
 
