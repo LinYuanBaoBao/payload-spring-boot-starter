@@ -18,3 +18,7 @@
 ### 1.0.2-RELEASE
 
 - 修复全局异常类仅能处理 `Accept = application/json` 问题
+
+### 1.0.3-RELEASE
+
+- 新增 **DynamicCode** 接口，异常可该接口来动态返回 code 值，优先级高于 **@BizErrorResponseStatus** 注解

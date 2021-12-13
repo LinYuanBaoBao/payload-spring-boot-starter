@@ -7,7 +7,7 @@
     <groupId>com.github.LinYuanBaoBao</groupId>
     <name>payload-spring-boot-starter</name>
     <artifactId>payload-spring-boot-starter</artifactId>
-    <version>1.0.2-RELEASE</version>
+    <version>1.0.3-RELEASE</version>
     <packaging>jar</packaging>
     <description>一个 SpringBoot 统一响应体/异常处理组件</description>
     <url>https://github.com/LinYuanBaoBao/payload-spring-boot-starter</url>

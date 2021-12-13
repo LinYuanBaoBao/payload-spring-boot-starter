@@ -15,7 +15,7 @@ by：林同学（765371578@qq.com）
 <dependency>
     <groupId>com.github.LinYuanBaoBao</groupId>
     <artifactId>payload-spring-boot-starter</artifactId>
-    <version>1.0.1-RELEASE</version>
+    <version>1.0.3-RELEASE</version>
 </dependency>
 ```
 
@@ -74,7 +74,7 @@ spring:
 
 ### 异常处理
 
-对于业务异常，建议继承 RuntimeException 类，并加上 **@BizErrorResponseStatus** 注解。 该注解还支持配置 `status` 属性定义 http-status 状态码，与 `code` 属性定义响应的 code 错误码。
+对于业务异常，建议继承 RuntimeException 类，并加上 **@BizErrorResponseStatus** 注解。 该注解还支持配置 `status` 属性定义 http-status 状态码，与 `code` 属性定义响应的 code （也可实现 **DynamicCode** 接口动态获取）错误码。
 
 ```java
 @BizErrorResponseStatus(code = 400,status = HttpStatus.BAD_REQUEST)

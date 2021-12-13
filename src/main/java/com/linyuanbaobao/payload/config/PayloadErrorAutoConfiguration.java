@@ -2,6 +2,7 @@ package com.linyuanbaobao.payload.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linyuanbaobao.payload.annotation.BizErrorResponseStatus;
+import com.linyuanbaobao.payload.support.DynamicCode;
 import com.linyuanbaobao.payload.support.model.DingDingRobotMsgDTO;
 import com.linyuanbaobao.payload.support.model.ExceptionMsgDTO;
 import com.linyuanbaobao.payload.support.utils.DingDingUtils;
@@ -115,8 +116,13 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     }
 
     private Integer getCode(int status, Throwable error) {
-        BizErrorResponseStatus annotation = getBizErrorAnnotation(error);
-        return (Objects.nonNull(annotation)) ? annotation.value() : status;
+        if (error instanceof DynamicCode) {
+            Integer code = ((DynamicCode) error).getCode();
+            return (Objects.nonNull(code)) ? code : status;
+        } else {
+            BizErrorResponseStatus annotation = getBizErrorAnnotation(error);
+            return (Objects.nonNull(annotation)) ? annotation.value() : status;
+        }
     }
 
     private BizErrorResponseStatus getBizErrorAnnotation(Throwable error) {
@@ -158,16 +164,18 @@ public class PayloadErrorAutoConfiguration extends DefaultErrorAttributes {
     public interface ErrorDeal {
         /**
          * 获取错误消息
+         *
          * @param resultAttributes 结果map
-         * @param error 错误
+         * @param error            错误
          * @return 错误消息
          */
         String getErrorMessage(Map<String, Object> resultAttributes, Throwable error);
 
         /**
          * 是否处理
+         *
          * @param webRequest webRequest
-         * @param options 选项
+         * @param options    选项
          * @return 是否处理
          */
         Boolean isDealAttributes(WebRequest webRequest, ErrorAttributeOptions options);
