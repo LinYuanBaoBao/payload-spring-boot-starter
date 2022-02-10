@@ -1,6 +1,6 @@
 ## Release Notes
 
-### 1.0.4-RELEASE
+### 1.1.0-RELEASE
 
 - 组件重构，以支持新版本 SpringBoot
 

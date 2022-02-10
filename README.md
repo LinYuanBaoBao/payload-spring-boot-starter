@@ -15,7 +15,7 @@ by：林同学（765371578@qq.com）
 <dependency>
     <groupId>com.github.LinYuanBaoBao</groupId>
     <artifactId>payload-spring-boot-starter</artifactId>
-    <version>1.0.4-RELEASE</version>
+    <version>1.1.0-RELEASE</version>
 </dependency>
 ```
 
