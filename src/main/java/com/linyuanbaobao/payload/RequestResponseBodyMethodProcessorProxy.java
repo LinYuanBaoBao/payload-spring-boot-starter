@@ -1,8 +1,8 @@
-package com.linyuanbaobao.payload.config;
+package com.linyuanbaobao.payload;
 
-import com.linyuanbaobao.payload.annotation.Payload;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.method.support.ModelAndViewContainer;
@@ -20,16 +20,8 @@ public class RequestResponseBodyMethodProcessorProxy implements HandlerMethodRet
 
     private RequestResponseBodyMethodProcessor delegate;
 
-    private Map<String, String> payloadMap;
-
-    private PayloadProperties payloadProperties;
-
-    RequestResponseBodyMethodProcessorProxy(RequestResponseBodyMethodProcessor delegate,
-                                            PayloadProperties payloadProperties,
-                                            Map<String, String> payloadMap) {
+    RequestResponseBodyMethodProcessorProxy(RequestResponseBodyMethodProcessor delegate) {
         this.delegate = delegate;
-        this.payloadProperties = payloadProperties;
-        this.payloadMap = payloadMap;
     }
 
     @Override
@@ -49,11 +41,10 @@ public class RequestResponseBodyMethodProcessorProxy implements HandlerMethodRet
     @Override
     public void handleReturnValue(Object o, MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest) throws Exception {
         Map<String, Object> result = new HashMap<>();
-        result.put(payloadMap.get(PayloadProperties.ATTRIBUTE_SUCCESS), true);
-        result.put(payloadMap.get(PayloadProperties.ATTRIBUTE_CODE), payloadProperties.getCode());
-        result.put(payloadMap.get(PayloadProperties.ATTRIBUTE_MESSAGE), "success");
-        result.put(payloadMap.get(PayloadProperties.ATTRIBUTE_DATA), o);
-        result.put(payloadMap.get(PayloadProperties.ATTRIBUTE_TIMESTAMP), System.currentTimeMillis());
+        result.put("success", true);
+        result.put("code", HttpStatus.OK);
+        result.put("data", o);
+        result.put("timestamp", System.currentTimeMillis());
         delegate.handleReturnValue(result, methodParameter, modelAndViewContainer, nativeWebRequest);
     }
 

@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.linyuanbaobao.payload.config.PayloadAutoConfiguration,com.linyuanbaobao.payload.config.PayloadErrorAutoConfiguration
+com.linyuanbaobao.payload.PayloadAutoConfiguration,com.linyuanbaobao.payload.GlobalExceptionHandler

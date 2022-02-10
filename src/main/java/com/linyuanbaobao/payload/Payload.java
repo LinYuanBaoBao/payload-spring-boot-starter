@@ -1,4 +1,4 @@
-package com.linyuanbaobao.payload.annotation;
+package com.linyuanbaobao.payload;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
